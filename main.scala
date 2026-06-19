@@ -1,1 +1,0 @@
-// Starting Elixir-Loyalty-Program service\n
