@@ -1,8 +1,14 @@
-FROM python:3.11-slim
+FROM elixir:1.18-alpine AS build
+WORKDIR /src
+ENV MIX_ENV=prod
+COPY mix.exs .formatter.exs ./
+COPY lib ./lib
+RUN mix compile --warnings-as-errors && mix escript.build
+
+FROM elixir:1.18-alpine AS runtime
+RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-ENV PYTHONPATH=/app
-EXPOSE 8080
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]
+COPY --from=build /src/sky_loyalty /app/sky_loyalty
+USER app
+ENTRYPOINT ["/app/sky_loyalty"]
+CMD ["help"]

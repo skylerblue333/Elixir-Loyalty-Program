@@ -1,44 +1,63 @@
-<!-- PORTFOLIO PROJECT PROFILE: maintained by the repository owner -->
+# Sky Loyalty Core
 
-## Project profile and code-audit snapshot
+**Status: engineering beta.** A small dependency-free Elixir loyalty-points ledger for deterministic earn, redeem, and adjustment rules.
 
-**What this is:** **Elixir-Loyalty-Program** is a public repository described as: “Enterprise-grade loyalty program implementation in Elixir. #SkyCoin4444 #AI #Blockchain #DevOps #Innovation” Its dominant language signals are **Python (4 files)**.
+## Implemented
 
-**Why it has value:** Its value is best understood through the implementation evidence currently present in the repository: **18 tracked files** were observed in the shallow audit, with the source structure and existing documentation providing the project’s specific context. This README does not treat a prototype, experiment, or archive as a production system without supporting evidence.
+- integer-only loyalty points
+- bounded 1–64 character member and transaction IDs
+- idempotency protection through unique transaction IDs
+- earn, redeem, and signed adjustment operations
+- insufficient-balance rejection
+- one-billion-point per-member balance ceiling
+- deterministic balance and ledger summaries
+- ExUnit coverage for core invariants
+- formatter and warnings-as-errors compile gates
+- escript CLI smoke tests
+- non-root container packaging
 
-**Implementation evidence:** 2 test-related file(s) detected; 2 dependency or package manifest(s) detected; 2 build/CI/infrastructure signal(s) detected; and 3 documentation or governance file(s) detected. Test filenames observed include `tests/__init__.py`, `tests/test_main.py`. Dependency or package files include `package.json`, `requirements.txt`. Build, CI, or infrastructure signals include `Dockerfile`, `.github/workflows/ci.yml`.
+## Use
 
-**Current status:** The repository is tracked on the `main` branch. The existing source tree, configuration, tests, workflows, and documentation remain authoritative for supported behavior and maturity. A code audit is not a production-readiness certification, and the presence of a test or workflow file does not establish that all checks pass.
+```bash
+mix format --check-formatted
+mix compile --warnings-as-errors
+mix test
+mix escript.build
+./sky_loyalty demo
+```
 
-**Relationship to the wider portfolio:** This repository is one focused component of the broader Skyler Blue Spillers portfolio across AI, software engineering, cloud and DevOps, cybersecurity, blockchain, finance, education, social systems, and creative work. It may provide a service boundary, implementation pattern, experiment, archive, or reusable idea for related repositories. Treat repositories as technical dependencies only where documented interfaces and verified project requirements support that relationship.
+Validate a single operation without persisting it:
 
-**Quality and security note:** No obvious secret-like pattern was detected by the limited static scan; this is not a substitute for a security audit. No TODO/FIXME marker was detected in the scanned text files.
+```bash
+./sky_loyalty validate tx-001 member-001 earn 250
+```
 
----
+Library example:
 
-# Elixir Loyalty Program
+```elixir
+ledger = SkyLoyalty.new()
+{:ok, ledger, _} = SkyLoyalty.apply(ledger, "tx-001", "member-001", :earn, 250)
+{:ok, ledger, _} = SkyLoyalty.apply(ledger, "tx-002", "member-001", :redeem, 75)
+{:ok, 175} = SkyLoyalty.balance(ledger, "member-001")
+```
 
-![GitHub stars](https://img.shields.io/github/stars/skylerblue333/Elixir-Loyalty-Program?style=flat-square)
-![GitHub license](https://img.shields.io/github/license/skylerblue333/Elixir-Loyalty-Program?style=flat-square)
+## SKYCOIN4444 integration
 
-## 🌟 Overview
-**Elixir-Loyalty-Program** is a professional-grade project within the **SkyCoin4444** ecosystem. It focuses on delivering high-value solutions in the domain of **Python**.
+Use this repository as a points-domain primitive behind a stable adapter for rewards, marketplace incentives, creator programs, education achievements, or community participation. The integrating service must own identity, authorization, persistence, audit history, promotions policy, expiration, and fraud controls.
 
-## 🚀 Key Features
-- **Scalable Architecture**: Designed for enterprise-level growth and performance.
-- **Modern Standards**: Implements best practices for clean code and maintainability.
-- **Robust Integration**: Built to work seamlessly within modern cloud-native environments.
+## Explicit limitations
 
-## 🛠️ Technology Stack
-- **Primary Domain**: Python
-- **Ecosystem**: SkyCoin4444 Digital Platform
+This is an **in-memory domain core**, not a complete loyalty platform. It does not provide durable storage, multi-node consistency, customer accounts, authentication/RBAC, monetary value, gift cards, tier calculation, promotion campaigns, expiration schedules, partner settlement, fraud detection, accounting treatment, regulatory compliance, HA, or verified production deployment.
 
-## 📂 Structure
-The project is organized into a modular structure to ensure clarity and ease of development.
+Points are application data only; this repository does not represent them as currency, stored value, securities, or redeemable money.
 
-## 👨‍💻 Author
-**Skyler Blue Spillers**
-*Professional Chess Player & Software Engineer*
+## Container
 
----
-*Powered by SkyCoin4444*
+```bash
+docker build -t sky-loyalty .
+docker run --rm sky-loyalty demo
+```
+
+The runtime image executes as an unprivileged `app` user.
+
+See `SECURITY.md` and `CHANGELOG.md` for boundaries and productization history.
