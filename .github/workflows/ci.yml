@@ -1,12 +1,39 @@
-name: CI
-on: [push, pull_request]
+name: loyalty-ci
+
+on:
+  push:
+    branches: [main, "product/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  verify:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
         with:
-          python-version: '3.11'
-      - run: pip install -r requirements.txt
-      - run: pytest tests/ -v
+          elixir-version: '1.18.4'
+          otp-version: '27.3'
+      - name: Format
+        run: mix format --check-formatted
+      - name: Compile
+        run: mix compile --warnings-as-errors
+      - name: Tests
+        run: mix test
+      - name: Build escript
+        run: mix escript.build
+      - name: CLI smoke
+        run: ./sky_loyalty demo | grep -q 'balance=175'
+      - name: Build image
+        run: docker build -t sky-loyalty:ci .
+      - name: Verify non-root image
+        run: |
+          user="$(docker image inspect sky-loyalty:ci --format '{{.Config.User}}')"
+          test -n "$user"
+          test "$user" != "0"
+          test "$user" != "root"
+      - name: Container smoke
+        run: docker run --rm sky-loyalty:ci demo | grep -q 'total_points: 175'
