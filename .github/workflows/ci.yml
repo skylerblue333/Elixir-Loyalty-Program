@@ -26,7 +26,14 @@ jobs:
       - name: Build escript
         run: mix escript.build
       - name: CLI smoke
-        run: ./sky_loyalty demo | grep -q 'balance=175'
+        run: |
+          ./sky_loyalty demo | grep -q 'balance=175'
+          set +e
+          ./sky_loyalty validate tx-1 member-1 bogus 1 >/tmp/loyalty-invalid.out 2>&1
+          status=$?
+          set -e
+          test "$status" -eq 1
+          grep -q 'operation must be earn, redeem, or adjust' /tmp/loyalty-invalid.out
       - name: Build image
         run: docker build -t sky-loyalty:ci .
       - name: Verify non-root image
