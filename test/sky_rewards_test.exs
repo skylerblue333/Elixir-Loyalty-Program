@@ -37,9 +37,15 @@ defmodule SkyRewardsTest do
              SkyRewards.apply(policy, next, "provider-event-7", "member-1", "purchase.recorded")
 
     assert first.transaction_id ==
-             (SkyRewards.apply(policy, SkyLoyalty.new(), "provider-event-7", "member-1", "purchase.recorded")
-              |> elem(2)
-              |> Map.fetch!(:transaction_id))
+             SkyRewards.apply(
+               policy,
+               SkyLoyalty.new(),
+               "provider-event-7",
+               "member-1",
+               "purchase.recorded"
+             )
+             |> elem(2)
+             |> Map.fetch!(:transaction_id)
   end
 
   test "rejects unknown event types and unsafe policy rules" do
