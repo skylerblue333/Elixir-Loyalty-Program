@@ -36,4 +36,5 @@ jobs:
           test "$user" != "0"
           test "$user" != "root"
       - name: Container smoke
-        run: docker run --rm sky-loyalty:ci demo | grep -q 'total_points: 175'
+        run: |
+          docker run --rm sky-loyalty:ci demo | grep -q 'total_points: 175'
